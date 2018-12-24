@@ -85,7 +85,7 @@ public class AppScript : MonoBehaviour
         _depthVideoStream = _currentDevice.CreateVideoStream(Device.SensorType.Depth);
 
         _hFOV = _depthVideoStream.HorizontalFieldOfView;
-        _vFOV = _depthVideoStream.VerticalFieldOfView;
+        _vFOV = _depthVideoStream.VerticalFieldOfView;        
 
         _depthMapWidth = _depthVideoStream.VideoMode.Resolution.Width;
         _depthMapHeight = _depthVideoStream.VideoMode.Resolution.Height;
@@ -109,8 +109,12 @@ public class AppScript : MonoBehaviour
         );
 
         // PointCloud
-        _pointPositions = new List<Vector3>(_depthMapWidth * _depthMapHeight);
-        _pointCloudData = new PointCloudData();
+        _pointPositions = new List<Vector3>();
+        for(int i = 0; i < _depthMapWidth * _depthMapHeight; i++){
+            _pointPositions.Add(new Vector3());
+        }
+
+        _pointCloudData = ScriptableObject.CreateInstance<PointCloudData>();
         _pointCloudData.Initialize(_pointPositions);
         _pointCloudRenderer.sourceData = _pointCloudData;
 
@@ -121,6 +125,14 @@ public class AppScript : MonoBehaviour
     }
 
     private void CalculatePointPositions(){
+        print("CalculatePointPositions");
+
+        var px_to_deg = new Vector2(
+            _hFOV/_depthMapWidth,
+            _vFOV/_depthMapHeight
+        );
+
+                 
 
         for (int y = 0; y < _depthMapHeight; y++)
         {
@@ -128,9 +140,26 @@ public class AppScript : MonoBehaviour
             {
                 int index = (y * _depthMapWidth) + x;
 
-                
+                // var pos = _pointPositions[index];
+                var distanceZ = _rawDepthMap[index] / 1000f;
+
+                var x_from_center = x - _depthMapWidth/2;
+                var angleX = x_from_center*px_to_deg.x;
+
+                var y_from_center = y - _depthMapHeight/2;
+                var angleY = y_from_center*px_to_deg.y;
+
+                _pointPositions[index] = new Vector3(
+                    distanceZ * Mathf.Sin(angleX),
+                    distanceZ * Mathf.Sin(angleY),
+                    distanceZ
+                );
+
+        //        print(_pointPositions[index]);
             }
         }
+
+        _pointCloudData.Initialize(_pointPositions);
     }
 
     
@@ -138,9 +167,17 @@ public class AppScript : MonoBehaviour
     // EVENTS
 
     void OnNewDepthFrame(VideoStream vs){
+        if(this == null){
+            return;
+        }
+
+        print("OnNewDepthFrame");
+
         var frame = vs.ReadFrame();
         Marshal.Copy(frame.Data, _rawDepthMap, 0, _rawDepthMap.Length);
         
+
+        CalculatePointPositions();
         
         Loom.QueueOnMainThread(() => {            
             _depthMeshRenderer.UpdateMesh(_rawDepthMap);
@@ -159,16 +196,21 @@ public class AppScript : MonoBehaviour
     }  
 
     void OnDestroy(){
-        // if(_depthVideoStream != null){
-        //     _depthVideoStream.Stop();
-        // }
 
-        // if(_device != null){
-        //     _device.Close();
-        // }
+        // Loom.RunAsync(() => {
+            // if(_depthVideoStream != null){
+            //     // _depthVideoStream.OnNewFrame -= OnNewDepthFrame;
+            //     _depthVideoStream.Stop();
+            // }
 
-        // OpenNI.Shutdown();
+            // if(_currentDevice != null){
+            //     _currentDevice.Close();
+            // }
 
+        // });
+        
+
+        
         
     }
     

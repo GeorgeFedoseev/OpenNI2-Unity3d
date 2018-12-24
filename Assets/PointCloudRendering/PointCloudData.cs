@@ -18,9 +18,10 @@ public sealed class PointCloudData : ScriptableObject
         get {
             if (_pointBuffer == null)
             {
-                _pointBuffer = new ComputeBuffer(pointCount, elementSize);
-                _pointBuffer.SetData(_pointData);
+                _pointBuffer = new ComputeBuffer(pointCount, elementSize);                
             }
+
+            _pointBuffer.SetData(_pointData);
             return _pointBuffer;
         }
     }
@@ -45,13 +46,13 @@ public sealed class PointCloudData : ScriptableObject
     #region Serialized data members
 
     [System.Serializable]
-    struct Point
+    public struct Point
     {
         public Vector3 position;
         public uint color;
     }
 
-    [SerializeField] Point[] _pointData;
+    [SerializeField] public Point[] _pointData;
 
     #endregion
 

@@ -5,7 +5,7 @@ using UnityEngine;
 
 
 /// A renderer class that renders a point cloud contained by PointCloudData.
-[ExecuteInEditMode]
+// [ExecuteInEditMode]
 public sealed class PointCloudRenderer : MonoBehaviour
 {
     #region Editable attributes
@@ -81,12 +81,21 @@ public sealed class PointCloudRenderer : MonoBehaviour
         // print("OnRenderObject");
 
         // We need a source data or an externally given buffer.
-        if (_sourceData == null && sourceBuffer == null) return;
+        if (_sourceData == null){
+            print("if (_sourceData == null){");
+            return;
+        }
+         
 
         // Check the camera condition.
         var camera = Camera.current;
-        if ((camera.cullingMask & (1 << gameObject.layer)) == 0) return;
-        if (camera.name == "Preview Scene Camera") return;
+        if ((camera.cullingMask & (1 << gameObject.layer)) == 0) {
+            print("camera.cullingMask & (1 << gameObject.layer)) == 0");
+            return;   
+        }
+        
+
+        
 
         // TODO: Do view frustum culling here.
 
@@ -103,8 +112,12 @@ public sealed class PointCloudRenderer : MonoBehaviour
         }
 
         // Use the external buffer if given any.
-        var pointBuffer = sourceBuffer != null ?
-            sourceBuffer : _sourceData.computeBuffer;
+        var pointBuffer = _sourceData.computeBuffer;
+
+        // foreach(var p in _sourceData._pointData){
+        //     print($"PointX: {p.position.x}");
+        // }
+        
 
         if (_pointSize == 0)
         {
@@ -112,6 +125,7 @@ public sealed class PointCloudRenderer : MonoBehaviour
             _pointMaterial.SetColor("_Tint", _pointTint);
             _pointMaterial.SetMatrix("_Transform", transform.localToWorldMatrix);
             _pointMaterial.SetBuffer("_PointBuffer", pointBuffer);
+            print($"Graphics.DrawProcedural Point {pointBuffer.count}");
             Graphics.DrawProcedural(MeshTopology.Points, pointBuffer.count, 1);
         }
         else
@@ -121,6 +135,7 @@ public sealed class PointCloudRenderer : MonoBehaviour
             _diskMaterial.SetMatrix("_Transform", transform.localToWorldMatrix);
             _diskMaterial.SetBuffer("_PointBuffer", pointBuffer);
             _diskMaterial.SetFloat("_PointSize", pointSize);
+          //  print($"Graphics.DrawProcedural Disk {pointBuffer.count}");
             Graphics.DrawProcedural(MeshTopology.Points, pointBuffer.count, 1);
         }
     }
