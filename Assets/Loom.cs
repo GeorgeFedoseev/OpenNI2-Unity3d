@@ -63,6 +63,10 @@ public class Loom : MonoBehaviour
 	}
 	public static void QueueOnMainThread(Action action, float _time, string name = "")
 	{
+		if(Current == null){
+			return;
+		}
+
 		var time = TimeSpan.FromSeconds (_time);
 
 		if(_time != 0)
