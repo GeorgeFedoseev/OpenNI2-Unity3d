@@ -13,6 +13,7 @@ public class AppScript : MonoBehaviour
     private Device _currentDevice;
     private VideoStream _depthVideoStream;   
 
+    private int _depthMapWidth, _depthMapHeight;
     private float _hFOV, _vFOV;
 
     // depth frame data
@@ -86,34 +87,50 @@ public class AppScript : MonoBehaviour
         _hFOV = _depthVideoStream.HorizontalFieldOfView;
         _vFOV = _depthVideoStream.VerticalFieldOfView;
 
+        _depthMapWidth = _depthVideoStream.VideoMode.Resolution.Width;
+        _depthMapHeight = _depthVideoStream.VideoMode.Resolution.Height;
+
         Debug.Log($"H_FOV: {_hFOV/Math.PI*180}");
         Debug.Log($"V_FOV: {_vFOV/Math.PI*180}");
 
-        var res = _depthVideoStream.VideoMode.Resolution;
-        Debug.Log($"depth resolution: {res.Width}x{res.Height}");
+        
+        Debug.Log($"depth resolution: {_depthMapWidth}x{_depthMapHeight}");
 
         // init raw depth data
-        _rawDepthMap = new short[(int)(res.Width * res.Height)];
+        _rawDepthMap = new short[(int)(_depthMapWidth * _depthMapHeight)];
 
 
         // Mesh rendering
         _depthMeshRenderer.Init(
-            res.Width,
-            res.Height,
+            _depthMapWidth,
+            _depthMapHeight,
             _depthVideoStream.HorizontalFieldOfView,
             _depthVideoStream.VerticalFieldOfView
         );
 
         // PointCloud
-        _pointPositions = new List<Vector3>(res.Width * res.Height);
+        _pointPositions = new List<Vector3>(_depthMapWidth * _depthMapHeight);
         _pointCloudData = new PointCloudData();
         _pointCloudData.Initialize(_pointPositions);
         _pointCloudRenderer.sourceData = _pointCloudData;
 
         
         // Texture
-        _textureRenderer.Init(res.Width, res.Height, _depthVideoStream.MaxPixelValue);
+        _textureRenderer.Init(_depthMapWidth, _depthMapHeight, _depthVideoStream.MaxPixelValue);
         
+    }
+
+    private void CalculatePointPositions(){
+
+        for (int y = 0; y < _depthMapHeight; y++)
+        {
+            for (int x = 0; x < _depthMapWidth; x++)
+            {
+                int index = (y * _depthMapWidth) + x;
+
+                
+            }
+        }
     }
 
     
@@ -125,9 +142,9 @@ public class AppScript : MonoBehaviour
         Marshal.Copy(frame.Data, _rawDepthMap, 0, _rawDepthMap.Length);
         
         
-        Loom.QueueOnMainThread(() => {
-            
+        Loom.QueueOnMainThread(() => {            
             _depthMeshRenderer.UpdateMesh(_rawDepthMap);
+            _textureRenderer.UpdateTexture(_rawDepthMap);
         });        
     }
 

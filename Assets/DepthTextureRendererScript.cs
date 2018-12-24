@@ -51,7 +51,7 @@ public class DepthTextureRendererScript : MonoBehaviour
     }
 
 
-    public void UpdateWithDepthData(short[] rawDepthMap){
+    public void UpdateTexture(short[] rawDepthMap){
         UpdateHistogram(rawDepthMap);
         UpdateDepthmapTexture(rawDepthMap);
     }
