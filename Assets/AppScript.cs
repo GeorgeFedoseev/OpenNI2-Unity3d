@@ -10,30 +10,27 @@ using System;
 public class AppScript : MonoBehaviour
 {
 
-    public float _factor = 1f;
-    public int _maxPixelValue = 5000;
-
     private Device _currentDevice;
-    private VideoStream _depthVideoStream;
+    private VideoStream _depthVideoStream;   
 
+    private float _hFOV, _vFOV;
 
+    // depth frame data
+    private short[] _rawDepthMap;    
+
+    // Texture2D rendering
+    [SerializeField]
+    private DepthTextureRendererScript _textureRenderer;
+
+    // Mesh rendering
     [SerializeField]
     private DepthMeshRenderer _depthMeshRenderer;
 
-    // depth frame data
-    private short[] _rawDepthMap;
-    private Color32[] _depthMapPixels;
-    private Texture2D _depthMapTexture;
-
-    // histogram stuff
-    float[] depthHistogramMap;
-
-    // output
+    // PointCloud rendering
+    private List<Vector3> _pointPositions = null;    
+    private PointCloudData _pointCloudData = null;
     [SerializeField]
-    private RawImage _rawImage;
-
-
-    private List<Vector3> _pointPositions = null;
+    private PointCloudRenderer _pointCloudRenderer;
 
 
     // Start is called before the first frame update
@@ -86,13 +83,20 @@ public class AppScript : MonoBehaviour
 
         _depthVideoStream = _currentDevice.CreateVideoStream(Device.SensorType.Depth);
 
+        _hFOV = _depthVideoStream.HorizontalFieldOfView;
+        _vFOV = _depthVideoStream.VerticalFieldOfView;
 
-        Debug.Log($"H_FOV: {_depthVideoStream.HorizontalFieldOfView/Math.PI*180}");
-        Debug.Log($"V_FOV: {_depthVideoStream.VerticalFieldOfView/Math.PI*180}");
+        Debug.Log($"H_FOV: {_hFOV/Math.PI*180}");
+        Debug.Log($"V_FOV: {_vFOV/Math.PI*180}");
 
         var res = _depthVideoStream.VideoMode.Resolution;
         Debug.Log($"depth resolution: {res.Width}x{res.Height}");
 
+        // init raw depth data
+        _rawDepthMap = new short[(int)(res.Width * res.Height)];
+
+
+        // Mesh rendering
         _depthMeshRenderer.Init(
             res.Width,
             res.Height,
@@ -100,82 +104,19 @@ public class AppScript : MonoBehaviour
             _depthVideoStream.VerticalFieldOfView
         );
 
-        _rawDepthMap = new short[(int)(res.Width * res.Height)];
-        _depthMapPixels = new Color32[(int)(res.Width/_factor) * (int)(res.Height/_factor)];
-        _depthMapTexture = new Texture2D((int)(res.Width/_factor), (int)(res.Height/_factor));
+        // PointCloud
+        _pointPositions = new List<Vector3>(res.Width * res.Height);
+        _pointCloudData = new PointCloudData();
+        _pointCloudData.Initialize(_pointPositions);
+        _pointCloudRenderer.sourceData = _pointCloudData;
 
-        int maxDepth = (int)_depthVideoStream.MaxPixelValue;
-        depthHistogramMap = new float[maxDepth];
-
-        if(_rawImage != null){
-            _rawImage.texture = _depthMapTexture;
-        }
+        
+        // Texture
+        _textureRenderer.Init(res.Width, res.Height, _depthVideoStream.MaxPixelValue);
+        
     }
 
-    void UpdateHistogram()
-	{
-		int i, numOfPoints = 0;
-		
-		Array.Clear(depthHistogramMap, 0, depthHistogramMap.Length);
-
-        for (i = 0; i < _rawDepthMap.Length; i++) {
-            // only calculate for valid depth
-            if (_rawDepthMap[i] != 0) {
-                depthHistogramMap[_rawDepthMap[i]]++;
-                numOfPoints++;
-            }
-        }
-		
-        if (numOfPoints > 0) {
-            for (i = 1; i < depthHistogramMap.Length; i++) {   
-		        depthHistogramMap[i] += depthHistogramMap[i-1];
-	        }
-            for (i = 0; i < depthHistogramMap.Length; i++) {
-                depthHistogramMap[i] = (1.0f - (depthHistogramMap[i] / numOfPoints)) * 255;
-	        }
-        }
-		depthHistogramMap[0] = 0;
-	}
-
-    void UpdateDepthmapTexture()
-    {
-        int factor = 1;
-        var xRes = _depthVideoStream.VideoMode.Resolution.Width;
-        var yRes = _depthVideoStream.VideoMode.Resolution.Height;
-
-		// flip the depthmap as we create the texture		
-		int XScaled = xRes / factor;
-        int YScaled = yRes / factor;
-
-		int i = XScaled*YScaled-XScaled;
-		int depthIndex = 0;
-		for (int y = 0; y < YScaled; ++y, i-=XScaled)
-		{
-			for (int x = XScaled-1; x >= 0; --x, depthIndex += factor)
-			{
-				short pixel = _rawDepthMap[depthIndex];
-               
-
-                    
-				if (pixel == 0)
-				{
-					_depthMapPixels[i+x] = Color.clear;
-				}
-				else
-				{
-					Color32 c = new Color32(0, (byte)depthHistogramMap[pixel], 0, 255);
-					_depthMapPixels[i+x] = c;
-                }
-			}
-            // Skip lines
-			depthIndex += (factor-1)*xRes; 
-		}
-
-		
-
-		_depthMapTexture.SetPixels32(_depthMapPixels);
-        _depthMapTexture.Apply();      
-   }
+    
 
     // EVENTS
 
@@ -185,8 +126,7 @@ public class AppScript : MonoBehaviour
         
         
         Loom.QueueOnMainThread(() => {
-            UpdateHistogram();
-            UpdateDepthmapTexture();
+            
             _depthMeshRenderer.UpdateMesh(_rawDepthMap);
         });        
     }

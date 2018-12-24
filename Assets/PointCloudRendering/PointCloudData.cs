@@ -75,14 +75,15 @@ public sealed class PointCloudData : ScriptableObject
                 ((uint)y     << 24);
     }
 
-    public void Initialize(List<Vector3> positions, List<Color32> colors)
+    public void Initialize(List<Vector3> positions/*, List<Color32> colors*/)
     {
         _pointData = new Point[positions.Count];
         for (var i = 0; i < _pointData.Length; i++)
         {
             _pointData[i] = new Point {
                 position = positions[i],
-                color = EncodeColor(colors[i])
+                // color = EncodeColor(colors[i])
+                color = EncodeColor(Color.green)
             };
         }
     }

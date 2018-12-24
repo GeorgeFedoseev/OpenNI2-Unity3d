@@ -9,9 +9,8 @@ using UnityEngine;
 public sealed class PointCloudRenderer : MonoBehaviour
 {
     #region Editable attributes
-
-    [SerializeField] PointCloudData _sourceData;
-
+    
+    private PointCloudData _sourceData;
     public PointCloudData sourceData {
         get { return _sourceData; }
         set { _sourceData = value; }
