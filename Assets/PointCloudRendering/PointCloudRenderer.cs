@@ -125,7 +125,7 @@ public sealed class PointCloudRenderer : MonoBehaviour
             _pointMaterial.SetColor("_Tint", _pointTint);
             _pointMaterial.SetMatrix("_Transform", transform.localToWorldMatrix);
             _pointMaterial.SetBuffer("_PointBuffer", pointBuffer);
-            print($"Graphics.DrawProcedural Point {pointBuffer.count}");
+            // print($"Graphics.DrawProcedural Point {pointBuffer.count}");
             Graphics.DrawProcedural(MeshTopology.Points, pointBuffer.count, 1);
         }
         else

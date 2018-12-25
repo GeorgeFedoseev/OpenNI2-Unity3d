@@ -34,6 +34,10 @@ public class AppScript : MonoBehaviour
     private PointCloudRenderer _pointCloudRenderer;
 
 
+    [SerializeField]
+    Transform _testQuad;
+
+
     // Start is called before the first frame update
     void Start()
     {        
@@ -53,6 +57,9 @@ public class AppScript : MonoBehaviour
         if(devices.Length > 0){            
             OnDeviceConnectionStateChanged(devices[0]);
         }      
+
+
+        
     }    
 
     // METHODS
@@ -125,7 +132,7 @@ public class AppScript : MonoBehaviour
     }
 
     private void CalculatePointPositions(){
-        print("CalculatePointPositions");
+        // print("CalculatePointPositions");
 
         var px_to_deg = new Vector2(
             _hFOV/_depthMapWidth,
@@ -164,6 +171,39 @@ public class AppScript : MonoBehaviour
         _pointCloudData.Initialize(_pointPositions);
     }
 
+    private void CalculateDistancesToQuad(){
+        // print("CalculateDistancesToQuad");
+        var plane = new Plane(-_testQuad.transform.forward, _testQuad.transform.position);
+
+        int pointProjectedOnPlaneCount = 0;
+        foreach(var p in _pointPositions.ToArray()){
+
+            var point_on_plane = plane.ClosestPointOnPlane(p);
+            
+
+            var distance_to_plane = (p - point_on_plane).magnitude;
+            
+
+            var distance_on_plane = (point_on_plane-_testQuad.transform.position).magnitude;
+            
+            if(distance_on_plane < _testQuad.localScale.x && distance_to_plane < 0.01f){                
+                _pointToDraw = point_on_plane;
+                pointProjectedOnPlaneCount++;
+            }
+        }
+
+        if(pointProjectedOnPlaneCount > 0){
+            print($"Points projected on plane: {pointProjectedOnPlaneCount}");
+        }
+        
+    }
+
+    Vector3 _pointToDraw;
+    void OnDrawGizmos(){
+        Gizmos.color = Color.red;
+        Gizmos.DrawSphere(_pointToDraw, 0.1f);
+    }
+
     
 
     // EVENTS
@@ -173,15 +213,19 @@ public class AppScript : MonoBehaviour
             return;
         }
 
-        print("OnNewDepthFrame");
+        // print("OnNewDepthFrame");
 
         var frame = vs.ReadFrame();
         Marshal.Copy(frame.Data, _rawDepthMap, 0, _rawDepthMap.Length);
         
 
         CalculatePointPositions();
+
+        
         
         Loom.QueueOnMainThread(() => {            
+            CalculateDistancesToQuad();
+
             _depthMeshRenderer.UpdateMesh(_rawDepthMap);
             _textureRenderer.UpdateTexture(_rawDepthMap);
         });        
