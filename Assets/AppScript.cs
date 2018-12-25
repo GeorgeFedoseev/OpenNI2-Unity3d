@@ -34,9 +34,16 @@ public class AppScript : MonoBehaviour
     private PointCloudRenderer _pointCloudRenderer;
 
 
+
+    // testing point cloud and plane intersection
     [SerializeField]
     Transform _testQuad;
 
+    [SerializeField]
+    int _skipPoints = 0;
+
+    Vector3 _lastPosition;
+    Quaternion _lastRotation;
 
     // Start is called before the first frame update
     void Start()
@@ -53,7 +60,7 @@ public class AppScript : MonoBehaviour
         //     Debug.Log(d.Name);
         // }
 
-        // connect
+        // connect to first one
         if(devices.Length > 0){            
             OnDeviceConnectionStateChanged(devices[0]);
         }      
@@ -61,6 +68,12 @@ public class AppScript : MonoBehaviour
 
         
     }    
+    
+    void Update(){
+        _lastPosition = transform.position;
+        _lastRotation = transform.rotation;
+    }
+  
 
     // METHODS
     private void ConnectDevice(DeviceInfo deviceInfo){
@@ -73,6 +86,7 @@ public class AppScript : MonoBehaviour
         InitDepthVideoStreamForCurrentDevice();
 
         _depthVideoStream.OnNewFrame += OnNewDepthFrame;
+        
         _depthVideoStream.Start();
     }
 
@@ -140,12 +154,21 @@ public class AppScript : MonoBehaviour
         );
 
                  
+        int skipped_points = 0;
 
         for (int y = 0; y < _depthMapHeight; y++)
         {
             for (int x = 0; x < _depthMapWidth; x++)
             {
                 int index = (y * _depthMapWidth) + x;
+
+                if(skipped_points < _skipPoints){
+                    skipped_points++;
+                    _pointPositions[index] = Vector3.zero;
+                    continue;
+                }else{
+                    skipped_points = 0;
+                }               
 
                 // var pos = _pointPositions[index];
                 var distanceZ = _rawDepthMap[index] / 1000f;
@@ -157,11 +180,14 @@ public class AppScript : MonoBehaviour
                 y_from_center = -y_from_center;
                 var angleY = y_from_center*px_to_deg.y;
 
-                _pointPositions[index] = new Vector3(
+                _pointPositions[index] = _lastPosition + _lastRotation * new Vector3(
                     distanceZ * Mathf.Sin(angleX),
                     distanceZ * Mathf.Sin(angleY),
                     distanceZ
                 );
+
+                
+                
                 
 
         //        print(_pointPositions[index]);
@@ -176,7 +202,13 @@ public class AppScript : MonoBehaviour
         var plane = new Plane(-_testQuad.transform.forward, _testQuad.transform.position);
 
         int pointProjectedOnPlaneCount = 0;
+        
         foreach(var p in _pointPositions.ToArray()){
+            
+            if(p == Vector3.zero){
+                continue;
+            }
+            
 
             var point_on_plane = plane.ClosestPointOnPlane(p);
             
@@ -192,9 +224,9 @@ public class AppScript : MonoBehaviour
             }
         }
 
-        if(pointProjectedOnPlaneCount > 0){
-            print($"Points projected on plane: {pointProjectedOnPlaneCount}");
-        }
+        // if(pointProjectedOnPlaneCount > 0){
+        //     print($"Points projected on plane: {pointProjectedOnPlaneCount}");
+        // }
         
     }
 
@@ -218,16 +250,18 @@ public class AppScript : MonoBehaviour
         var frame = vs.ReadFrame();
         Marshal.Copy(frame.Data, _rawDepthMap, 0, _rawDepthMap.Length);
         
+        
 
         CalculatePointPositions();
+        
+        
+        Loom.QueueOnMainThread(() => {      
+            
 
-        
-        
-        Loom.QueueOnMainThread(() => {            
             CalculateDistancesToQuad();
 
-            _depthMeshRenderer.UpdateMesh(_rawDepthMap);
-            _textureRenderer.UpdateTexture(_rawDepthMap);
+            // _depthMeshRenderer.UpdateMesh(_rawDepthMap);
+            // _textureRenderer.UpdateTexture(_rawDepthMap);
         });        
     }
 

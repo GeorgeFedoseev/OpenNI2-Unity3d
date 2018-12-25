@@ -3,7 +3,7 @@ using UnityEngine;
 
 public sealed class PointCloudData : ScriptableObject
 {
-    #region Public properties
+
 
     /// Byte size of the point element.
     public const int elementSize = sizeof(float) * 4;
@@ -31,10 +31,7 @@ public sealed class PointCloudData : ScriptableObject
         }
     }
 
-    #endregion
-
-    #region ScriptableObject implementation
-
+   
     ComputeBuffer _pointBuffer;
 
     void OnDisable()
@@ -46,9 +43,9 @@ public sealed class PointCloudData : ScriptableObject
         }
     }
 
-    #endregion
+    
 
-    #region Serialized data members
+    
 
     [System.Serializable]
     public struct Point
@@ -59,11 +56,11 @@ public sealed class PointCloudData : ScriptableObject
 
     [SerializeField] public Point[] _pointData;
 
-    #endregion
+    
 
-    #region Editor functions
+    
 
-    #if UNITY_EDITOR
+    
 
     static uint EncodeColor(Color c)
     {
@@ -98,7 +95,7 @@ public sealed class PointCloudData : ScriptableObject
         
     }
 
-    #endif
+    
 
-    #endregion
+    
 }

@@ -8,7 +8,6 @@ using UnityEngine;
 // [ExecuteInEditMode]
 public sealed class PointCloudRenderer : MonoBehaviour
 {
-    #region Editable attributes
     
     private PointCloudData _sourceData;
     public PointCloudData sourceData {
@@ -30,29 +29,20 @@ public sealed class PointCloudRenderer : MonoBehaviour
         set { _pointSize = value; }
     }
 
-    #endregion
 
-    #region Public properties (nonserialized)
 
     public ComputeBuffer sourceBuffer { get; set; }
 
-    #endregion
 
-    #region Internal resources
 
     [SerializeField] Shader _pointShader;    
     [SerializeField] Shader _diskShader;  
 
-    #endregion
 
-    #region Private objects
 
     Material _pointMaterial;
     Material _diskMaterial;
 
-    #endregion
-
-    #region MonoBehaviour implementation
 
     void OnValidate()
     {
@@ -82,7 +72,7 @@ public sealed class PointCloudRenderer : MonoBehaviour
 
         // We need a source data or an externally given buffer.
         if (_sourceData == null){
-            print("if (_sourceData == null){");
+            // print("if (_sourceData == null){");
             return;
         }
          
@@ -140,5 +130,5 @@ public sealed class PointCloudRenderer : MonoBehaviour
         }
     }
 
-    #endregion
+    
 }
