@@ -24,9 +24,6 @@ public class DepthMeshRenderer : MonoBehaviour
 
 	public float meshUpdateInterval = 1f;
 
-	//private Vector2[] colorCoords = null;
-//	private ushort[] depthData = null;
-
 	private int _depthWidth = 0;
 	private int _depthHeight = 0;
 
@@ -96,13 +93,7 @@ public class DepthMeshRenderer : MonoBehaviour
                 }
             }
         }
-
-        // mesh.vertices = vertices;
-        // mesh.uv = uvs;
-        // mesh.triangles = triangles;
-        // mesh.RecalculateNormals();
-    }
-    
+    }    
     
     
     public void UpdateMesh(short[] rawDepthData)

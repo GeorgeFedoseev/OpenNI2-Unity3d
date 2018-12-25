@@ -29,16 +29,10 @@ public sealed class PointCloudRenderer : MonoBehaviour
         set { _pointSize = value; }
     }
 
-
-
     public ComputeBuffer sourceBuffer { get; set; }
-
-
 
     [SerializeField] Shader _pointShader;    
     [SerializeField] Shader _diskShader;  
-
-
 
     Material _pointMaterial;
     Material _diskMaterial;
@@ -82,10 +76,7 @@ public sealed class PointCloudRenderer : MonoBehaviour
         if ((camera.cullingMask & (1 << gameObject.layer)) == 0) {
             print("camera.cullingMask & (1 << gameObject.layer)) == 0");
             return;   
-        }
-        
-
-        
+        }       
 
         // TODO: Do view frustum culling here.
 
@@ -102,12 +93,7 @@ public sealed class PointCloudRenderer : MonoBehaviour
         }
 
         // Use the external buffer if given any.
-        var pointBuffer = _sourceData.computeBuffer;
-
-        // foreach(var p in _sourceData._pointData){
-        //     print($"PointX: {p.position.x}");
-        // }
-        
+        var pointBuffer = _sourceData.computeBuffer;  
 
         if (_pointSize == 0)
         {
@@ -128,7 +114,5 @@ public sealed class PointCloudRenderer : MonoBehaviour
           //  print($"Graphics.DrawProcedural Disk {pointBuffer.count}");
             Graphics.DrawProcedural(MeshTopology.Points, pointBuffer.count, 1);
         }
-    }
-
-    
+    }    
 }

@@ -63,10 +63,7 @@ public class AppScript : MonoBehaviour
         // connect to first one
         if(devices.Length > 0){            
             OnDeviceConnectionStateChanged(devices[0]);
-        }      
-
-
-        
+        }
     }    
     
     void Update(){
@@ -113,13 +110,11 @@ public class AppScript : MonoBehaviour
 
         Debug.Log($"H_FOV: {_hFOV/Math.PI*180}");
         Debug.Log($"V_FOV: {_vFOV/Math.PI*180}");
-
         
         Debug.Log($"depth resolution: {_depthMapWidth}x{_depthMapHeight}");
 
         // init raw depth data
         _rawDepthMap = new short[(int)(_depthMapWidth * _depthMapHeight)];
-
 
         // Mesh rendering
         _depthMeshRenderer.Init(
@@ -186,10 +181,6 @@ public class AppScript : MonoBehaviour
                     distanceZ
                 );
 
-                
-                
-                
-
         //        print(_pointPositions[index]);
             }
         }
@@ -201,26 +192,22 @@ public class AppScript : MonoBehaviour
         // print("CalculateDistancesToQuad");
         var plane = new Plane(-_testQuad.transform.forward, _testQuad.transform.position);
 
-        int pointProjectedOnPlaneCount = 0;
+        // int pointProjectedOnPlaneCount = 0;
         
         foreach(var p in _pointPositions.ToArray()){
             
             if(p == Vector3.zero){
                 continue;
-            }
-            
+            }            
 
-            var point_on_plane = plane.ClosestPointOnPlane(p);
-            
+            var point_on_plane = plane.ClosestPointOnPlane(p);            
 
             var distance_to_plane = (p - point_on_plane).magnitude;
-            
-
             var distance_on_plane = (point_on_plane-_testQuad.transform.position).magnitude;
             
             if(distance_on_plane < _testQuad.localScale.x/2 && distance_to_plane < 0.01f){                
                 _pointToDraw = point_on_plane;
-                pointProjectedOnPlaneCount++;
+                // pointProjectedOnPlaneCount++;
             }
         }
 
@@ -234,9 +221,7 @@ public class AppScript : MonoBehaviour
     void OnDrawGizmos(){
         Gizmos.color = Color.red;
         Gizmos.DrawSphere(_pointToDraw, 0.1f);
-    }
-
-    
+    }    
 
     // EVENTS
 
@@ -244,22 +229,16 @@ public class AppScript : MonoBehaviour
         if(this == null){
             return;
         }
-
         // print("OnNewDepthFrame");
 
         var frame = vs.ReadFrame();
         Marshal.Copy(frame.Data, _rawDepthMap, 0, _rawDepthMap.Length);
-        
-        
 
-        CalculatePointPositions();
+        CalculatePointPositions();        
         
-        
-        Loom.QueueOnMainThread(() => {      
-            
+        Loom.QueueOnMainThread(() => {
 
             CalculateDistancesToQuad();
-
             // _depthMeshRenderer.UpdateMesh(_rawDepthMap);
             // _textureRenderer.UpdateTexture(_rawDepthMap);
         });        
@@ -272,25 +251,9 @@ public class AppScript : MonoBehaviour
         if(deviceInfo.IsValid){
             ConnectDevice(deviceInfo);
         }
-
     }  
 
     void OnDestroy(){
-
-        // Loom.RunAsync(() => {
-            // if(_depthVideoStream != null){
-            //     // _depthVideoStream.OnNewFrame -= OnNewDepthFrame;
-            //     _depthVideoStream.Stop();
-            // }
-
-            // if(_currentDevice != null){
-            //     _currentDevice.Close();
-            // }
-
-        // });
-        
-
-        
         
     }
     
