@@ -186,7 +186,7 @@ public class AppScript : MonoBehaviour
 
             var distance_on_plane = (point_on_plane-_testQuad.transform.position).magnitude;
             
-            if(distance_on_plane < _testQuad.localScale.x && distance_to_plane < 0.01f){                
+            if(distance_on_plane < _testQuad.localScale.x/2 && distance_to_plane < 0.01f){                
                 _pointToDraw = point_on_plane;
                 pointProjectedOnPlaneCount++;
             }
