@@ -147,6 +147,7 @@ public class AppScript : MonoBehaviour
                 var angleX = x_from_center*px_to_deg.x;
 
                 var y_from_center = y - _depthMapHeight/2;
+                y_from_center = -y_from_center;
                 var angleY = y_from_center*px_to_deg.y;
 
                 _pointPositions[index] = new Vector3(
@@ -154,6 +155,7 @@ public class AppScript : MonoBehaviour
                     distanceZ * Mathf.Sin(angleY),
                     distanceZ
                 );
+                
 
         //        print(_pointPositions[index]);
             }

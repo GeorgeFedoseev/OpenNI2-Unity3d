@@ -8,6 +8,8 @@ public sealed class PointCloudData : ScriptableObject
     /// Byte size of the point element.
     public const int elementSize = sizeof(float) * 4;
 
+    private object _pointDataLock = new object();
+
     /// Number of points.
     public int pointCount {
         get { return _pointData.Length; }
@@ -21,7 +23,10 @@ public sealed class PointCloudData : ScriptableObject
                 _pointBuffer = new ComputeBuffer(pointCount, elementSize);                
             }
 
-            _pointBuffer.SetData(_pointData);
+            lock(_pointDataLock){
+                _pointBuffer.SetData(_pointData);
+            }
+            
             return _pointBuffer;
         }
     }
@@ -78,15 +83,19 @@ public sealed class PointCloudData : ScriptableObject
 
     public void Initialize(List<Vector3> positions/*, List<Color32> colors*/)
     {
-        _pointData = new Point[positions.Count];
-        for (var i = 0; i < _pointData.Length; i++)
-        {
-            _pointData[i] = new Point {
-                position = positions[i],
-                // color = EncodeColor(colors[i])
-                color = EncodeColor(Color.green)
-            };
+
+        lock(_pointDataLock){
+            _pointData = new Point[positions.Count];
+            for (var i = 0; i < _pointData.Length; i++)
+            {
+                _pointData[i] = new Point {
+                    position = positions[i],
+                    // color = EncodeColor(colors[i])
+                    color = EncodeColor(Color.green)
+                };
+            }
         }
+        
     }
 
     #endif
